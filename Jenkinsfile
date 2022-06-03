@@ -4,15 +4,21 @@ pipeline {
     stages {
 
         stage('Pull Repository') {
-            steps{
-                git clone 'https://github.com/karakoc49/java-test'
+            steps {
+                git url: 'https://github.com/karakoc49/java-test', branch: 'main'
             }
         }
             
 
         stage('Build') { 
             steps {
-                sh 'javac Hello.java' 
+                sh 'javac Hello.java'
+            }
+        }
+
+        stage('Run') {
+            steps {
+                sh 'java Hello'
             }
         }
     }
