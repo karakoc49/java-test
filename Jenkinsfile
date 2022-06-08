@@ -3,11 +3,11 @@ pipeline {
 
     stages {
 
-        stage('Pull Repository') {
+        /*stage('Pull Repository') {
             steps {
                 git url: 'https://github.com/karakoc49/java-test', branch: 'main'
             }
-        }
+        }*/
             
 
         stage('Build') { 
