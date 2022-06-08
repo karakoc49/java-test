@@ -24,9 +24,9 @@ pipeline {
 
         stage('Building and Pushing Docker Image') {
             steps {
-                sh 'docker build --tag java-test .;'
-                sh 'docker image tag java-test karakoc49/java-test;'
-                sh 'docker push karakoc49/java-test'
+                sh 'docker build --tag java-test .'
+                sh 'docker image tag java-test karakoc49/java-test'
+                sh 'docker push karakoc49/java-test:latest'
             }
         }
 
