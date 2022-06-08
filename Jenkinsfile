@@ -32,14 +32,16 @@ pipeline {
 
         stage('Running Docker Container') {
             steps {
-                sh 'if [ ! "$(docker ps -q -f name=Java_TEST)" ]; then
-                        if [ "$(docker ps -aq -f status=exited -f name=Java_TEST)" ]; then
-                            # cleanup
-                            docker rm Java_TEST
+                sh '''
+                        if [ ! "$(docker ps -q -f name=Java_TEST)" ]; then
+                            if [ "$(docker ps -aq -f status=exited -f name=Java_TEST)" ]; then
+                                # cleanup
+                                docker rm Java_TEST
+                            fi
+                            # run your container
+                            docker run -d --name Java_TEST karakoc49/java_test
                         fi
-                        # run your container
-                        docker run -d --name Java_TEST karakoc49/java_test
-                    fi'
+                    '''
             }
         }
     }
