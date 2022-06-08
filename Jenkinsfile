@@ -30,10 +30,11 @@ pipeline {
             }
         }
 
-        stage('Running Docker Container')
+        stage('Running Docker Container') {
             steps {
                 sh 'docker rm Java-TEST'
                 sh 'docker run -d --name Java-TEST karakoc49/java-test'
             }
+        }
     }
 }
