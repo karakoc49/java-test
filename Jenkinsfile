@@ -36,7 +36,7 @@ pipeline {
                         docker stop "$app" && docker rm -f "$app"
                     fi
                     '''
-                sh 'docker run -d --name Java_TEST karakoc49/java_test'
+                sh 'docker run -d --restart unless-stopped --name Java_TEST karakoc49/java_test'
             }
         }
     }
