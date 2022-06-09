@@ -29,10 +29,12 @@ pipeline {
 
         stage('Running Docker Container') {
             steps {
-                //Eğer ikinci sunucuda halihazırda Java_TEST konteynerı varsa siliyor, eğer yoksa yarattığım imajı repomdan çekip konteyner olarak detached bir şekilde Java_TEST adı altında koşturuyor
+                //Eğer ikinci sunucuda halihazırda Java_TEST konteynerı varsa durdurup siliyor, eğer yoksa yarattığım imajı repomdan çekip konteyner olarak detached bir şekilde Java_TEST adı altında koşturuyor
                 sh '''
                         if [ ! "$(docker ps -q -f name=Java_TEST)" ]; then
                             if [ "$(docker ps -aq -f status=exited -f name=Java_TEST)" ]; then
+                                # stop
+                                docker stop Java_TEST
                                 # cleanup
                                 docker rm Java_TEST
                             fi
