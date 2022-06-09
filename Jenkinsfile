@@ -31,6 +31,7 @@ pipeline {
             steps {
                 //Eğer ikinci sunucuda halihazırda Java_TEST konteynerı varsa durdurup siliyor, eğer yoksa yarattığım imajı repomdan çekip konteyner olarak detached bir şekilde Java_TEST adı altında koşturuyor
                 sh 'docker ps -q --filter "name=Java_TEST" | grep -q . && docker stop Java_TEST && docker rm Java_TEST'
+                sh 'docker run -d --name Java_TEST karakoc49/java_test'
             }
         }
     }
