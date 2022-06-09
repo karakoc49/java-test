@@ -1,8 +1,20 @@
+<h1>Repository URL</h1>
+
+<h2>
+
+[Project Repository](https://github.com/karakoc49/java-test)
+
+<h2>
+
+
+
 <h1>1. Dağıtım Seçimi ve Sanal Makinelerin Kurulumu</h1>
 
-Her ne kadar gereksiz snap paketlerinden ve open source ilkesine uygun olmamasını düşündüğümden dolayı Ubuntu'dan pekte haz etmesemde dağıtım olarak Ubuntu LTS Sunucu 20.04 sürümü kullanmaya karar verdim. Debian 11 de kullanabilirdim ama kurulum işlemini basit tutmak istedim.
+Her ne kadar gereksiz snap paketlerinden ve open source ilkesine uygun olmamasını düşündüğümden dolayı Ubuntu'dan pekte haz etmesem de dağıtım olarak Ubuntu LTS Sunucu 20.04 sürümü kullanmaya karar verdim. Debian 11 de kullanabilirdim ama kurulum işlemini basit tutmak istedim.
 
-Öncelikle 2 tane sanal makine oluşturdum. Bu sanal makinelerden ilkini Jenkins'i koşturan sunucu olarak (jenkins_server@ubuntuserver), diğerini ise Jenkins agent ve konteyner imajını çalıştıracağım ikinci sunucu (jenkins_agent@ubuntuserver) olarak oluşturdum.
+Öncelikle 2 tane sanal makine oluşturdum. Bu sanal makinelerden ilkini Jenkins'i koşturan sunucu olarak (jenkins_server@ubuntuserver), diğerini ise Jenkins agent ve konteyner imajını çalıştıracağım ikinci sunucu (jenkins_agent@ubuntuserver) olarak oluşturdum. Aynı makinede iki ayrı kullanıcı açmadım yanlış anlaşılmasın sadece nedense iki makinenin de adını aynı koydum :)
+
+<h2>Kurduğum sunucuları ve içindeki programların hepsinin dilini İngilizce(en_us) olarak kurduğumu belirtmek isterim.</h2>
 
 <h1>2. Gerekli programların kurulumu</h2>
 
@@ -23,7 +35,7 @@ Sunucuya ssh ile bağlanıp kullanmak daha rahat geliyordu bende ssh bağlantıs
 ```
 <br>
 
-Ardından Jenkins'in çalışması için Java'ya ihtiyaç duyduğum için Java yükledim.
+Ardından Jenkins çalışmak için Java'ya ihtiyaç duyuyor bu yüzden Java yükledim.
 ```console
 * jenkins_server@ubuntuserver:~$ sudo apt install openjdk-11-jre-headless
 ```
@@ -149,9 +161,14 @@ Bu oluşturuğum .crt dosyasını cacerts store'a importluyorum.
 ```console
 jenkins_server@ubuntuserver:~$ sudo keytool -importcert -file jenkins.cloud.local.crt -alias jenkins -keystore -cacerts
 ```
-<br>
-
 Bu aşamaları yapma sebebim; sertifika dosyalarını oluşturmak, bu dosyaları Jenkins'in anlayacağı uzantıya çevirmek ve güvenilir sertifikalar listesine eklemekti.
+<br><br>
+
+Jenkins dosyalarının sahipliğinin jenkins kullanıcısına olması gerekiyor ama yeni oluşturduğum dosyaların sahipliği root kullanıcısına ait. Bunun için tüm jenkins klasörünün sahipliğini alt dosyaları da dahil olmak üzere  jenkins kullanıcısına aktarıyorum.
+```console
+jenkins_server@ubuntuserver:~$ sudo chown -R jenkins:jenkins /var/lib/jenkins
+```
+<br>
 
 Şimdi sıra Jenkins'in config dosyasını ayarlamaya geldi. Bunun için /lib/systemd/system/jenkins.service dosyasını herhangi bir metin düzenleyici aracılığıyla açmalıyım. Bunun için her zamanki gibi vim kullanacağım.
 ```console
@@ -194,3 +211,126 @@ Artık Jenkins'e https://localhost:8443 adresinden ulaşmam gerekiyor. http://lo
 jenkins_server@ubuntuserver:~$ sudo ufw delete allow 8080
 ```
 <br>
+
+<h1>4. Jenkins Agent Kurulumu</h1>
+Jenkins, pipeline aşamalarını uygularken agent kullanımını zorunlu kılmaz fakat iş gücünü parelel çalışan işlemcilere dağıtmak ve çeşitli güvenlik sebeplerinden dolayı agent kurmamız önerilir. Bende bu kurulumda agent kullanmaya karar verdim.
+<br><br>
+
+Öncelikle agent kurmak için sol alttan Build Executor Status sekmesine giriyorum.<br>
+Oradan solda yer alan "New Node" butonuna tıklayınca yeni node(agent) kurma sekmesi karşılıyor beni. Node name kısmına "agent1" girip Permanent Agent tikini işaretliyorum çünkü kuracağım agentın kalıcı olmasını istiyorum.
+<br><br>
+
+Number of executors
+```
+1
+```
+<br>
+
+Remote root directory
+```
+/home/jenkins_agent/agent
+```
+<br>
+
+Labels
+```
+linux docker java agent1
+```
+<br>
+
+Usage
+```
+Use this node as much as possible
+```
+<br>
+
+Launch method
+```
+Launch agents via SSH
+```
+
+* Host
+  ```
+  192.168.1.208
+  ```
+
+* Host Key Verification Strategy
+  ```
+  Known hosts file Verification Strategy
+  ```
+
+Availability
+```
+Keep this agent online as much as possible
+```
+<br>
+
+Host Key Verification Strategy olarak Known hosts file Verification Strategy seçtiğim için jenkinsin dizinindeki known_hosts dosyasının içine agent ip adresimi girmeliyim.
+<br>
+
+Öncelikle known_hosts dosyasını yerleştireceğim .ssh klasörünü oluşturuyorum
+```console
+jenkins_server@ubuntuserver:~$ sudo mkdir -p /var/lib/jenkins/.ssh
+```
+<br>
+
+ssh-keyscan aracı yardımıyla known_hosts dosyasını oluşturuyorum
+```console
+jenkins_server@ubuntuserver:~$ sudo ssh-keyscan -H 192.168.1.208 >> /var/lib/jenkins/.ssh/known_hosts
+```
+<br>
+
+Oluşturduğum dosyaların sahibi yine root kullanıcısı. Bu dosyaların sahipliğini öncedende yaptığım gibi hemen jenkins kullanıcısına geçiriyorum.
+```console
+jenkins_server@ubuntuserver:~$ sudo chown -R jenkins:jenkins /var/lib/jenkins
+```
+<br>
+
+Değişiklikleri aynen yapıp agent1 sunucumu da açtıktan sonra jenkins arayüzünden agent1 nodeuna başarılı bir şekilde güvenli ssh bağlantısı kurduğumu gösteren "Agent successfully connected and online" yazısını görüyorum.
+
+<h1>5. Pipeline Oluşturma</h1>
+
+Jenkins arayüzünde New Item sekmesine girip Pipeline'ı seçip pipelıneıma isim veriyorum.
+<br>
+
+Definition
+```
+Pipeline script from SCM
+```
+
+* Repositories<br>
+  * Repository URL
+    ```
+    https://github.com/karakoc49/java-test
+    ```
+    <br> 
+
+* Branches to build<br>
+  * Branch specifier
+    ```
+    */main
+    ```
+    <br>
+
+* Script path
+  ```
+  Jenkinsfile
+  ```
+  <br>
+
+<h1>6. Docker Socket Yetkisi</h1>
+
+Jenkins konteyner imajı oluşturmak için docker kullanıyor. Bunun için ikinci sunucudaki(jenkins_agent@ubuntuserver) docker socketine(/var/run/docker.sock) erişim izni gerekiyor.
+<br>
+
+Bunun için jenkins grubunu ve kullanıcıyı docker grubuna dahil etmem gerekiyor.
+```console
+jenkins_agent@ubuntuserver:~$ sudo usermod -aG docker jenkins
+jenkins_agent@ubuntuserver:~$ sudo usermod -aG docker $USER
+```
+
+<h1>7. Eklemek İstediklerim ve Son</h1>
+Şu ana kadar başaramadığım tek şey geçerli bir SSL sertifikası bulabilmek oldu. İtiraf etmeliyim ki daha önce çalıştığım sunucuların hiç birinde DNS hizmeti yoktu. Bu yüzden de geçerli bir sertifika ile SSL bağlantı kurmayı başaramadım. DNS hizmeti olan bir sunucu üzerinde çalışırsam çeşitli sertifika hizmetleri ile geçerli bir SSL bağlantısı kurabileceğime inanıyorum.
+<br><br>
+
+Bunun dışında yaptığım adımlardan sonra her şeyin mükemmel bir şekilde çalıştığını düşünüyorum ve yaptığım işten her zamanki gibi gurur duyuyorum.
