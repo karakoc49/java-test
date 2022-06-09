@@ -30,18 +30,7 @@ pipeline {
         stage('Running Docker Container') {
             steps {
                 //Eğer ikinci sunucuda halihazırda Java_TEST konteynerı varsa durdurup siliyor, eğer yoksa yarattığım imajı repomdan çekip konteyner olarak detached bir şekilde Java_TEST adı altında koşturuyor
-                sh '''
-                        if [ ! "$(docker ps -q -f name=Java_TEST)" ]; then
-                            if [ "$(docker ps -aq -f status=exited -f name=Java_TEST)" ]; then
-                                # stop
-                                docker stop Java_TEST
-                                # cleanup
-                                docker rm Java_TEST
-                            fi
-                            # run your container
-                            docker run -d --name Java_TEST karakoc49/java_test
-                        fi
-                    '''
+                sh 'docker ps -q --filter "name=Java_TEST" | grep -q . && docker stop Java_TEST && docker rm Java_TEST'
             }
         }
     }
